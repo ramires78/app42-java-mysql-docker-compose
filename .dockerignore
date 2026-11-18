@@ -1,0 +1,16 @@
+# Старые настройки MySQL
+WebContent/Config.properties
+
+# Резервные копии
+*.bak
+
+# Результаты сборки Maven
+target/
+
+# Файлы Git
+.git
+.gitignore
+
+# Временные файлы
+*.swp
+*~

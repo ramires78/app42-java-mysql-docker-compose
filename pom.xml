@@ -1,0 +1,104 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- Версия формата самого pom.xml  -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Указываем, кто выпустил приложение, как оно называется и какая у него версия -->
+    <!-- packaging war — собираем именно WAR, потому что запускать будем через Tomcat -->
+    <groupId>com.shephertz</groupId>
+    <artifactId>app42-java-mysql</artifactId>
+    <version>1.0.0</version>
+    <packaging>war</packaging>
+
+    <!-- Настройки компиляции -->
+    <!-- Приложение древнее, изначально было под Java 6 -->
+    <!-- Выставляем Java 8, чтобы не пришлось переделывать весь старый код -->
+    <!-- UTF-8 — ну тут чтобы нормально обрабатывались русские буквы и другие символы -->
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- Здесь перечисляем библиотеки, которые нужны нашему приложению, а Maven сам скачает их при сборке -->
+    <dependencies>
+
+        <!-- Библиотека для работы Java-приложения с HTTP-запросами через Tomcat -->
+        <!-- provided — при сборке нужна, но в WAR ее не кладем так как она уже есть внутри Tomcat 9 -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Драйвер для подключения Java к базе MySQL -->
+        <!-- В старом проекте был совсем древний драйвер 3.1.8, заменили на 8.0.33 -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
+        </dependency>
+
+        <!-- Spring JDBC нужен, чтобы приложению было проще работать с базой -->
+        <!-- Обновили старую версию, но остались в ветке Spring 3.2 -->
+        <!-- Остальные нужные библиотеки Spring Maven подтянет сам -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>3.2.18.RELEASE</version>
+        </dependency>
+
+    </dependencies>
+
+    <!-- Настраиваем как именно Maven будет собирать приложение -->
+    <build>
+
+        <!-- Указываем где лежат исходники Java -->
+        <!-- В моем случае это папка src, а не стандартная src/main/java -->
+        <sourceDirectory>src</sourceDirectory>
+
+        <!-- Готовый файл будет называться ROOT.war -->
+        <!-- Так Tomcat откроет приложение сразу по адресу http://IP:8080/ -->
+        <finalName>ROOT</finalName>
+
+        <!-- Плагины — это инструменты Maven для сборки -->
+        <plugins>
+
+            <!-- Этот плагин компилирует наши файлы в классы -->
+            <!-- Обновили его до 3.11.0, потому что старый был уже древний -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+            </plugin>
+
+            <!-- Этот плагин собирает готовый WAR для Tomcat -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+
+                <configuration>
+
+                    <!-- Веб-страницы и настройки у нас лежат в WebContent -->
+                    <!-- Поэтому говорю чтоб Maven брал их именно оттуда -->
+                    <warSourceDirectory>WebContent</warSourceDirectory>
+ 
+                    <!-- В WebContent/WEB-INF/lib лежат три старых JAR -->
+                    <!-- старый Spring, MySQL Connector и Commons Logging -->
+                    <!-- их в WAR не кладем, чтобы не конфликтовали с новыми библиотеками -->
+                    <!-- при этом зависимости, которые скачал Maven, останутся в WAR -->
+                    <warSourceExcludes>
+                        WEB-INF/lib/*.jar
+                    </warSourceExcludes>
+
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

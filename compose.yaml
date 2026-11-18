@@ -1,0 +1,62 @@
+services:
+
+  # Мое Java-приложение на Tomcat
+  app:
+
+    # Собираю образ из своего Dockerfile
+    build: .
+    image: app42-java-mysql:1.0
+
+    # Открываю доступ к приложению на порту 8080
+    ports:
+      - "8080:8080"
+
+    # Настройки подключения к MySQL
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: dd
+      DB_USER: app42
+      DB_PASSWORD: app42_demo_password
+
+    # Жду готовности MySQL перед запуском приложения
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Перезапускаю контейнер при сбое
+    restart: unless-stopped
+
+
+  # Контейнер с базой MySQL
+  db:
+
+    # Беру готовый образ MySQL 8.0
+    image: mysql:8.0
+
+    # Создаю базу и пользователя при первом запуске
+    environment:
+      MYSQL_ROOT_PASSWORD: root_demo_password
+      MYSQL_DATABASE: dd
+      MYSQL_USER: app42
+      MYSQL_PASSWORD: app42_demo_password
+
+    # Сохраняю данные базы отдельно от контейнера
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    # Проверяю, что база готова принимать подключения
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_PASSWORD}\" mysql -h 127.0.0.1 -u \"$${MYSQL_USER}\" -D \"$${MYSQL_DATABASE}\" -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+    # Перезапускаю MySQL при сбое
+    restart: unless-stopped
+
+
+# Отдельное хранилище для данных MySQL
+volumes:
+  mysql_data:
